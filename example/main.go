@@ -34,14 +34,14 @@ func barf(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"message": "stop it"}`))
 }
 
-// A function that takes a variable amount of time
+// A function that sleeps a variable amount of time
 func random(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	x := rand.Int() % 6000
 	time.Sleep(time.Duration(int64(x)) * time.Millisecond)
 
-	w.Write([]byte(fmt.Sprintf(`{"slept": %d}`, x)))
+	w.Write([]byte(fmt.Sprintf(`{"slept": "%dms"}`, x)))
 }
 
 // flip sets lifecycle.Ready to the inverse of it's current state
