@@ -30,12 +30,10 @@ var Shutdown = false
 // Ready is a boolean that represents whether the application is ready.
 var Ready = true
 
-var (
-	// ShutdownTimer is a configuration option for this package that sets the
-	// amount of time in seconds an application should wait before exiting
-	// after receiving a SIGTERM.
-	ShutdownTimer int64 = 15
-)
+// ShutdownTimer is a configuration option for this package that sets the
+// amount of time in seconds an application should wait before exiting
+// after receiving a SIGTERM.
+var ShutdownTimer int64 = 15
 
 // LivenessHandler reports on the status of Shutdown
 func LivenessHandler(w http.ResponseWriter, r *http.Request) {
