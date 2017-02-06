@@ -85,9 +85,9 @@ func main() {
 	server := &http.Server{Addr: hostPort, Handler: internalMux}
 	lifecycle.ShutdownOnTerm(server)
 
-	err := server.ListenAndServe()
-	if err != http.ErrServerClosed {
-		spec.Logger.Fatal("", zap.Error(err))
+
+	if err := server.ListenAndServe(); err != http.ErrServerClosed {
+		spec.Logger.Fatal("Error listening", zap.Error(err))
 	}
 	spec.Logger.Info("Server gracefully stopped")
 }
