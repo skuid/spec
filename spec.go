@@ -25,20 +25,37 @@ The Logger can be used like so:
 package spec
 
 import (
-	"github.com/uber-go/zap"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
-// Logger is a zap.Logger that is initialized with the proper field names and
-// time format for Skuid
-var Logger zap.Logger
+//Logger is a zap.Logger that can be set to the same logger you've created
+var Logger *zap.Logger
 
-func init() {
-	Logger = zap.New(
-		zap.NewJSONEncoder(
-			zap.RFC3339Formatter("timestamp"),
-			zap.MessageKey("message"),
-			zap.LevelString("level"),
-			// TODO: Write a stacktrace key formatter for zap
-		),
-	)
+//NewStandardLogger creates a new zap.Logger based on common configuration
+func NewStandardLogger() (l *zap.Logger, err error) {
+	config := zap.Config{
+		Level:       zap.NewAtomicLevel(),
+		Development: false,
+		Sampling: &zap.SamplingConfig{
+			Initial:    100,
+			Thereafter: 100,
+		},
+		Encoding: "json",
+		EncoderConfig: zapcore.EncoderConfig{
+			TimeKey:        "timestamp",
+			LevelKey:       "level",
+			NameKey:        "logger",
+			CallerKey:      "caller",
+			MessageKey:     "message",
+			StacktraceKey:  "stacktrace",
+			EncodeLevel:    zapcore.LowercaseLevelEncoder,
+			EncodeTime:     zapcore.ISO8601TimeEncoder,
+			EncodeDuration: zapcore.SecondsDurationEncoder,
+		},
+		OutputPaths:      []string{"stdout"},
+		ErrorOutputPaths: []string{"stderr"},
+	}
+
+	return config.Build()
 }
