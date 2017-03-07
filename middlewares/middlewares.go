@@ -13,7 +13,7 @@ import (
 	"net/http"
 
 	"github.com/skuid/spec"
-	"github.com/uber-go/zap"
+	"go.uber.org/zap"
 )
 
 // Middleware is a type for decorating requests.

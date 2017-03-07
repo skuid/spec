@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/skuid/spec"
-	"github.com/uber-go/zap"
+	"go.uber.org/zap"
 )
 
 var term = syscall.SIGTERM

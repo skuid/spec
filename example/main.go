@@ -15,7 +15,7 @@ import (
 	"github.com/skuid/spec/lifecycle"
 	_ "github.com/skuid/spec/metrics"
 	"github.com/skuid/spec/middlewares"
-	"github.com/uber-go/zap"
+	"go.uber.org/zap"
 )
 
 func init() {
@@ -55,6 +55,14 @@ func flip(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`{"Ready": "%t"}`, lifecycle.Ready)))
 }
 
+//Logger to be used within the package
+var Logger *zap.Logger
+
+func init() {
+	Logger, _ = spec.NewStandardLogger()
+	spec.Logger = Logger
+}
+
 func main() {
 
 	mux := http.NewServeMux()
@@ -84,7 +92,6 @@ func main() {
 
 	server := &http.Server{Addr: hostPort, Handler: internalMux}
 	lifecycle.ShutdownOnTerm(server)
-
 
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		spec.Logger.Fatal("Error listening", zap.Error(err))
