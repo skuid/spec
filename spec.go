@@ -52,6 +52,7 @@ func NewStandardLogger() (l *zap.Logger, err error) {
 			EncodeLevel:    zapcore.LowercaseLevelEncoder,
 			EncodeTime:     zapcore.ISO8601TimeEncoder,
 			EncodeDuration: zapcore.SecondsDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
 		},
 		OutputPaths:      []string{"stdout"},
 		ErrorOutputPaths: []string{"stderr"},
