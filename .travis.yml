@@ -1,0 +1,16 @@
+sudo: false
+language: go
+
+go:
+- 1.8
+- tip
+
+before_install:
+- go get golang.org/x/tools/cmd/cover
+- go get -u github.com/golang/lint/golint
+
+script:
+- golint ./...
+- go test -coverprofile=coverage.out .
+- go tool cover -func=coverage.out
+- go test ./...
