@@ -13,6 +13,7 @@ func init() {
 }
 
 // NewStandardRedisClient generates a preconfigured redis client according to our spec.
+// Accepts an *redis.Options object, and overrides the Addr field to use `$REDIS_HOST:6379` instead
 func NewStandardRedisClient(options *redis.Options) *redis.Client {
 	options.Addr = redisHost + ":6379"
 	return redis.NewClient(options)
