@@ -20,6 +20,7 @@ func NewStandardRedisClient(options *redis.Options) *redis.Client {
 }
 
 // NewStandardRedisCache generates a preconfigured redis cache according to our spec, using msgpack for serialization format.
+// Accepts an *redis.Options object, and overrides the Addr field to use `$REDIS_HOST:6379` instead
 func NewStandardRedisCache(options *redis.Options) codec *cache.Codec {
 	return &cache.Codec{
 		Redis: NewStandardRedisClient(options),
