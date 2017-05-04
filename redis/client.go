@@ -1,3 +1,12 @@
+/*
+Package redis adds built-in Redis support with our common configuration.
+This will ensure that Go services using "github.com/skuid/spec" are in compliance with our infrastructure expectations.
+
+The package provides two utilities for using Redis.
+NewStandardRedisClient generates a full-featured Redis client, with preconfigured connection settings from our spec.
+NewStandardRedisCache generates a more limited Redis cache interface whcih will automatically marshal
+	and unmarshal into msgpack, also preconfigured with connection settings from our spec.
+*/
 package redis
 
 import (
