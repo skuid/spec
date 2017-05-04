@@ -5,7 +5,7 @@ This will ensure that Go services using "github.com/skuid/spec" are in complianc
 The package provides two utilities for using Redis.
 NewStandardRedisClient generates a full-featured Redis client, with preconfigured connection settings from our spec.
 NewStandardRedisCache generates a more limited Redis cache interface whcih will automatically marshal
-	and unmarshal into msgpack, also preconfigured with connection settings from our spec.
+and unmarshal into msgpack, also preconfigured with connection settings from our spec.
 */
 package redis
 
