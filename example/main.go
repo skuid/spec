@@ -55,12 +55,9 @@ func flip(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`{"Ready": "%t"}`, lifecycle.Ready)))
 }
 
-//Logger to be used within the package
-var Logger *zap.Logger
-
 func init() {
-	Logger, _ = spec.NewStandardLogger()
-	spec.Logger = Logger
+	l, _ := spec.NewStandardLogger() // handle error
+	zap.ReplaceGlobals(l)
 }
 
 func main() {
@@ -88,13 +85,13 @@ func main() {
 
 	hostPort := ":3000"
 
-	spec.Logger.Info("Server is starting", zap.String("listen", hostPort))
+	zap.L().Info("Server is starting", zap.String("listen", hostPort))
 
 	server := &http.Server{Addr: hostPort, Handler: internalMux}
 	lifecycle.ShutdownOnTerm(server)
 
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
-		spec.Logger.Fatal("Error listening", zap.Error(err))
+		zap.L().Fatal("Error listening", zap.Error(err))
 	}
-	spec.Logger.Info("Server gracefully stopped")
+	zap.L().Info("Server gracefully stopped")
 }
