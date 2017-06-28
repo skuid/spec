@@ -12,7 +12,6 @@ package middlewares
 import (
 	"net/http"
 
-	"github.com/skuid/spec"
 	"go.uber.org/zap"
 )
 
@@ -88,7 +87,7 @@ func Logging() Middleware {
 			wrappedWriter := &statusLoggingResponseWriter{w, http.StatusOK, 0}
 
 			defer func() {
-				spec.Logger.Info(
+				zap.L().Info(
 					"",
 					zap.String("path", r.URL.Path),
 					zap.String("method", r.Method),
@@ -102,7 +101,7 @@ func Logging() Middleware {
 
 			err := r.ParseForm()
 			if err != nil {
-				spec.Logger.Error("Error parsing form", zap.Error(err))
+				zap.L().Error("Error parsing form", zap.Error(err))
 				http.Error(w, `{"error": "error parsing form"}`, http.StatusBadRequest)
 				return
 			}
