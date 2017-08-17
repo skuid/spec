@@ -11,6 +11,7 @@ package middlewares
 
 import (
 	"net/http"
+	"strings"
 
 	"go.uber.org/zap"
 )
@@ -64,16 +65,26 @@ func (w *statusLoggingResponseWriter) Write(data []byte) (int, error) {
 	return length, err
 }
 
+func stripPort(remoteAddr string) string {
+	splitIndex := strings.LastIndex(remoteAddr, ":")
+	if splitIndex > 0 {
+		strippedAddress := remoteAddr[0:splitIndex]
+		return strippedAddress
+	}
+	return remoteAddr
+}
+
 func getRemoteAddr(r *http.Request) string {
 	address := r.Header.Get("X-Real-IP")
 	if len(address) > 0 {
-		return address
+		return stripPort(address)
 	}
 	address = r.Header.Get("X-Forwarded-For")
 	if len(address) > 0 {
-		return address
+		return stripPort(address)
 	}
-	return r.RemoteAddr
+	return stripPort(r.RemoteAddr)
+
 }
 
 /*
