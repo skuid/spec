@@ -1,8 +1,14 @@
 package middlewares
 
 import (
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
 )
 
 func TestGetRemoteAddr(t *testing.T) {
@@ -70,5 +76,46 @@ func TestGetRemoteAddr(t *testing.T) {
 		if got := getRemoteAddr(request); got != c.want {
 			t.Errorf("Failed %s: getRemoteAddr() Expected: %v, got: %v", c.name, c.want, got)
 		}
+	}
+}
+
+func TestLoggingClosures(t *testing.T) {
+
+	// Set up the observer and inject it into the logger
+	core, observed := observer.New(zapcore.DebugLevel)
+	opt := zap.WrapCore(func(zapcore.Core) zapcore.Core {
+		return core
+	})
+	logger := zap.NewExample(opt)
+	reset := zap.ReplaceGlobals(logger)
+	defer reset()
+
+	handleRequest := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "Hello, client")
+	}
+
+	closure := func(r *http.Request) []zapcore.Field {
+		return []zapcore.Field{zap.String("user", r.Header.Get("user"))}
+	}
+
+	server := httptest.NewServer(Logging(closure)(http.HandlerFunc(handleRequest)))
+	defer server.Close()
+
+	request, _ := http.NewRequest(http.MethodGet, server.URL, nil)
+	request.Header.Add("user", "alfanzo")
+	client := http.Client{}
+	_, err := client.Do(request)
+	if err != nil {
+		t.Fatalf("Error making request to test server: %s", err.Error())
+	}
+
+	logger.Sync()
+	if observed.Len() == 0 {
+		t.Fatal("Expected log! Got no logs")
+	}
+	loggedMessage := observed.All()[0]
+	if loggedMessage.Context[7].String != "alfanzo" {
+		t.Errorf("Didn't find alfanzo")
 	}
 }
