@@ -5,6 +5,10 @@
 This library is an implementation of Skuid's Microservice spec, to remove
 boilerplate when creating microservices in Go.
 
+## Contributing
+
+See [CONTRIBUTING.md](/CONTRIBUTING.md)
+
 ## License
 
 MIT (See [License](/LICENSE))
