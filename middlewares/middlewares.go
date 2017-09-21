@@ -93,26 +93,26 @@ func getRemoteAddr(r *http.Request) string {
 //
 // Logging accepts an optional list of closures that accept the inoming request
 // and return a slice of zapcore.Field. Each closure is evaluated and its response
-// fields are appended to the logged message
+// fields are appended to the logged message after the request is handled
 func Logging(closures ...func(*http.Request) []zapcore.Field) Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			wrappedWriter := &statusLoggingResponseWriter{w, http.StatusOK, 0}
 
-			fields := []zapcore.Field{
-				zap.String("path", r.URL.Path),
-				zap.String("method", r.Method),
-				zap.Int("status", wrappedWriter.status),
-				zap.String("query", r.Form.Encode()),
-				zap.String("remote_addr", getRemoteAddr(r)),
-				zap.String("user_agent", r.Header.Get("User-Agent")),
-				zap.Int("body_bytes", wrappedWriter.bodyBytes),
-			}
-
-			for _, f := range closures {
-				fields = append(fields, f(r)...)
-			}
 			defer func() {
+				fields := []zapcore.Field{
+					zap.String("path", r.URL.Path),
+					zap.String("method", r.Method),
+					zap.Int("status", wrappedWriter.status),
+					zap.String("query", r.Form.Encode()),
+					zap.String("remote_addr", getRemoteAddr(r)),
+					zap.String("user_agent", r.Header.Get("User-Agent")),
+					zap.Int("body_bytes", wrappedWriter.bodyBytes),
+				}
+
+				for _, f := range closures {
+					fields = append(fields, f(r)...)
+				}
 				zap.L().Info("", fields...)
 			}()
 
