@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 // Middleware is a type for decorating requests.
@@ -84,30 +85,35 @@ func getRemoteAddr(r *http.Request) string {
 		return stripPort(address)
 	}
 	return stripPort(r.RemoteAddr)
-
 }
 
-/*
-Logging is a middleware for adding a request log. Logs contains the following
-fields: level, timestamp, path, method, response_time, status, message, query,
-remote_addr, and user_agent.
-*/
-func Logging() Middleware {
+// Logging is a middleware for adding a request log. Logs contains the following
+// fields: level, timestamp, path, method, response_time, status, message, query,
+// remote_addr, and user_agent.
+//
+// Logging accepts an optional list of closures that accept the inoming request
+// and return a slice of zapcore.Field. Each closure is evaluated and its response
+// fields are appended to the logged message
+func Logging(closures ...func(*http.Request) []zapcore.Field) Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			wrappedWriter := &statusLoggingResponseWriter{w, http.StatusOK, 0}
 
+			fields := []zapcore.Field{
+				zap.String("path", r.URL.Path),
+				zap.String("method", r.Method),
+				zap.Int("status", wrappedWriter.status),
+				zap.String("query", r.Form.Encode()),
+				zap.String("remote_addr", getRemoteAddr(r)),
+				zap.String("user_agent", r.Header.Get("User-Agent")),
+				zap.Int("body_bytes", wrappedWriter.bodyBytes),
+			}
+
+			for _, f := range closures {
+				fields = append(fields, f(r)...)
+			}
 			defer func() {
-				zap.L().Info(
-					"",
-					zap.String("path", r.URL.Path),
-					zap.String("method", r.Method),
-					zap.Int("status", wrappedWriter.status),
-					zap.String("query", r.Form.Encode()),
-					zap.String("remote_addr", getRemoteAddr(r)),
-					zap.String("user_agent", r.Header.Get("User-Agent")),
-					zap.Int("body_bytes", wrappedWriter.bodyBytes),
-				)
+				zap.L().Info("", fields...)
 			}()
 
 			err := r.ParseForm()
