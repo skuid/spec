@@ -15,7 +15,9 @@ import (
 	"github.com/skuid/spec/lifecycle"
 	_ "github.com/skuid/spec/metrics"
 	"github.com/skuid/spec/middlewares"
+	flag "github.com/spf13/pflag"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func init() {
@@ -55,12 +57,18 @@ func flip(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`{"Ready": "%t"}`, lifecycle.Ready)))
 }
 
-func init() {
-	l, _ := spec.NewStandardLogger() // handle error
-	zap.ReplaceGlobals(l)
-}
-
 func main() {
+
+	level := spec.LevelPflagPCommandLine("level", "l", zapcore.InfoLevel, "Log level")
+	flag.Parse()
+
+	l, _ := spec.NewStandardLevelLogger(*level) // handle error
+	zap.ReplaceGlobals(l)
+
+	zap.L().Debug("Some debug log")
+	zap.L().Info("Some info log")
+	zap.L().Error("Some error log")
+	//zap.L().Fatal("Some fatal log") // Terminates application
 
 	mux := http.NewServeMux()
 
