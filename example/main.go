@@ -10,10 +10,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/skuid/spec"
 	"github.com/skuid/spec/lifecycle"
-	_ "github.com/skuid/spec/metrics"
 	"github.com/skuid/spec/middlewares"
 	flag "github.com/spf13/pflag"
 	"go.uber.org/zap"
@@ -87,9 +85,9 @@ func main() {
 
 	internalMux := http.NewServeMux()
 	internalMux.Handle("/", handler)
-	internalMux.Handle("/metrics", promhttp.Handler())
-	internalMux.HandleFunc("/live", lifecycle.LivenessHandler)
-	internalMux.HandleFunc("/ready", lifecycle.ReadinessHandler)
+
+	// Listen on 3001 for metrics and healthchecks
+	go spec.MetricsServer(3001)
 
 	hostPort := ":3000"
 
