@@ -1,34 +1,11 @@
 package middlewares
 
 import (
-	"fmt"
 	"net/http"
-	"os"
 	"time"
 
-	"github.com/DataDog/datadog-go/statsd"
 	"github.com/prometheus/client_golang/prometheus"
 )
-
-var statsdClient *statsd.Client
-
-func initStatsdClient() {
-	statsdHost := os.Getenv("STATSD_HOST")
-	statsdPort := os.Getenv("STATSD_PORT")
-	applicationNamespace := os.Getenv("STATSD_APP_NAME")
-
-	var err error
-	statsdClient, err = statsd.New(statsdHost + ":" + statsdPort)
-	if err != nil {
-		fmt.Println("** We were unable to get a statsd client.")
-	}
-
-	statsdClient.Namespace = applicationNamespace
-}
-
-func getStatsdClient() *statsd.Client {
-	return statsdClient
-}
 
 var (
 	requestCounter = prometheus.NewCounterVec(
@@ -72,13 +49,14 @@ func monitor(verb, path string, httpCode int, reqStart time.Time) {
 	requestLatenciesSummary.WithLabelValues(verb, path).Observe(elapsed)
 
 	// datadog statsd
-	statsdClient.Incr("http_request_count", []string{verb, path, codeToString(httpCode)}, 1)
-	statsdClient.Histogram("http_request_duration", elapsed, []string{verb, path}, 1)
+	if statsdClient != nil {
+		statsdClient.Incr("http_request_count", []string{verb, path, codeToString(httpCode)}, 1)
+		statsdClient.Histogram("http_request_duration", elapsed, []string{verb, path}, 1)
+	}
 }
 
 func init() {
 	register()
-	initStatsdClient()
 }
 
 // InstrumentRoute is a middleware for adding the following metrics for each
