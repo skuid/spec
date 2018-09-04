@@ -47,6 +47,12 @@ func monitor(verb, path string, httpCode int, reqStart time.Time) {
 	requestCounter.WithLabelValues(verb, path, codeToString(httpCode)).Inc()
 	requestLatencies.WithLabelValues(verb, path).Observe(elapsed)
 	requestLatenciesSummary.WithLabelValues(verb, path).Observe(elapsed)
+
+	// datadog statsd
+	if statsdClient != nil {
+		statsdClient.Incr("http_request_count", []string{verb, path, codeToString(httpCode)}, 1)
+		statsdClient.Histogram("http_request_duration", elapsed, []string{verb, path}, 1)
+	}
 }
 
 func init() {
@@ -60,7 +66,7 @@ func init() {
 //     http_request_count{"verb", "path", "code}
 //     # Histogram
 //     http_request_latencies{"verb", "path"}
-//     # Summary
+//     # Summary *only for prometheus metrics*
 //     http_request_duration_microseconds{"verb", "path", "code}
 //
 func InstrumentRoute() Middleware {
