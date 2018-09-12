@@ -1,10 +1,13 @@
 package middlewares
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/skuid/spec/version"
 )
 
 var (
@@ -50,8 +53,14 @@ func monitor(verb, path string, httpCode int, reqStart time.Time) {
 
 	// datadog statsd
 	if statsdClient != nil {
-		statsdClient.Incr("http_request_count", []string{verb, path, codeToString(httpCode)}, 1)
-		statsdClient.Histogram("http_request_duration", elapsed, []string{verb, path}, 1)
+		tags := [4]string{
+			fmt.Sprintf("%s:%s", "sha", version.Commit),
+			fmt.Sprintf("%s:%s", "method", strings.ToLower(verb)),
+			fmt.Sprintf("%s:%s", "path", path),
+			fmt.Sprintf("%s:%d", "status", httpCode),
+		}
+		statsdClient.Incr("http_request_count", tags[:], 1)
+		statsdClient.Histogram("http_request_duration", elapsed, tags[:3], 1)
 	}
 }
 
