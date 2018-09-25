@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -51,6 +52,8 @@ func monitor(verb, path string, httpCode int, reqStart time.Time) {
 	requestLatencies.WithLabelValues(verb, path).Observe(elapsed)
 	requestLatenciesSummary.WithLabelValues(verb, path).Observe(elapsed)
 
+	statsdClient := Client()
+
 	// datadog statsd
 	if statsdClient != nil {
 		tags := [4]string{
@@ -61,6 +64,25 @@ func monitor(verb, path string, httpCode int, reqStart time.Time) {
 		}
 		statsdClient.Incr("http_request_count", tags[:], 1)
 		statsdClient.Histogram("http_request_duration", elapsed, tags[:3], 1)
+
+		statsdClient.Incr(fmt.Sprintf("http_request_status_%s", statusType(httpCode)), tags[:], 1)
+	}
+}
+
+func statusType(code int) string {
+	switch math.Floor(float64(code) / float64(100)) {
+	case 5:
+		return "server_error"
+	case 4:
+		return "client_error"
+	case 3:
+		return "redirection"
+	case 2:
+		return "successful"
+	case 1:
+		return "informational"
+	default:
+		return "unknown_error"
 	}
 }
 
@@ -82,14 +104,12 @@ func InstrumentRoute() Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			now := time.Now()
-
 			wrappedWriter := &statusLoggingResponseWriter{w, http.StatusOK, 0}
 
 			defer func() {
 				monitor(r.Method, r.URL.Path, wrappedWriter.status, now)
 			}()
 			h.ServeHTTP(wrappedWriter, r)
-
 		})
 	}
 }
