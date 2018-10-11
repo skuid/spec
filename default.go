@@ -6,7 +6,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/skuid/spec/lifecycle"
-	_ "github.com/skuid/spec/metrics" // import spec metrics
 	"go.uber.org/zap"
 )
 
