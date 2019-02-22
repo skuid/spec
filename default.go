@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/skuid/spec/lifecycle"
-	_ "github.com/skuid/spec/metrics" // import spec metrics
 	"go.uber.org/zap"
 )
 
@@ -17,7 +15,6 @@ import (
 //
 func MetricsServer(port int) {
 	internalMux := http.NewServeMux()
-	internalMux.Handle("/metrics", promhttp.Handler())
 	internalMux.HandleFunc("/live", lifecycle.LivenessHandler)
 	internalMux.HandleFunc("/ready", lifecycle.ReadinessHandler)
 	hostPort := fmt.Sprintf(":%d", port)
