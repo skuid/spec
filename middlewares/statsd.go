@@ -32,6 +32,7 @@ func Client() *statsd.Client {
 }
 
 
+// Hardcoded maps and values used in DataDogWriter.Write() for constructing a statsd Event from a log message buffer.
 var eventMap = map[string]statsd.EventAlertType{
 	"debug": statsd.Success,
 	"info": statsd.Info,
@@ -49,9 +50,19 @@ type logMsg struct {
 	Timestamp string `json:"timestamp"`
 	Tags []string `json:"tags"`
 }
+func (msg logMsg) Text() string {
+	return fmt.Sprintf("{\"message\": \"%s\", \"caller\": \"%s\", \"stack\": \"%s\"}", msg.Message, msg.Caller, msg.Stacktrace)
+}
+
+// DataDogWriter implements io.Writer. It should be made into a [WriteSyncer](https://godoc.org/go.uber.org/zap/zapcore#WriteSyncer)
+// for sending Zap logs to DataDog as [Events](https://godoc.org/github.com/DataDog/datadog-go/statsd#Event), using
+// datadog-go/statsd [Client.Event()](https://godoc.org/github.com/DataDog/datadog-go/statsd#Client.Event).
 type DataDogWriter struct {
 	client *statsd.Client
 }
+// Write will take a JSON-formatted log message from zap.L().[Level]() as a byte slice, format it, and send it as
+// an Event to d.client.Event().
+// @param p []byte - the byte array of the buffered log message.
 func (d DataDogWriter) Write(p []byte) (n int, err error) {
 	var msg logMsg
 	if err := json.Unmarshal(p, &msg); err != nil {
@@ -73,7 +84,7 @@ func (d DataDogWriter) Write(p []byte) (n int, err error) {
 		AlertType: eventMap[msg.Level],
 		Tags: tags,
 		Title: msg.Name,
-		Text: fmt.Sprintf("{\"message\": \"%s\", \"caller\": \"%s\", \"stack\": \"%s\"", msg.Message, msg.Caller, msg.Stacktrace),
+		Text: msg.Text(),
 		Timestamp: ts,
 	}
 
@@ -83,7 +94,9 @@ func (d DataDogWriter) Write(p []byte) (n int, err error) {
 		evt.Priority = statsd.Normal
 	}
 
-	d.client.Event(&evt)
+	if err := d.client.Event(&evt); err != nil {
+		return 0, err
+	}
 	// n is supposed to be the number of bytes written, must return error if n < len(p)
 	return len(p), nil
 }
