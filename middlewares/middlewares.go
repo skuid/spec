@@ -88,10 +88,10 @@ func getRemoteAddr(r *http.Request) string {
 }
 
 // Logging is a middleware for adding a request log. Logs contains the following
-// fields: level, timestamp, path, method, response_time, status, message, query,
-// remote_addr, and user_agent.
+// fields: level, timestamp, response_time, message, path, method, status, query,
+// remote_addr, user_agent, and body_bytes.
 //
-// Logging accepts an optional list of closures that accept the inoming request
+// Logging accepts an optional list of closures that accept the incoming request
 // and return a slice of zapcore.Field. Each closure is evaluated and its response
 // fields are appended to the logged message after the request is handled
 func Logging(closures ...func(*http.Request) []zapcore.Field) Middleware {
@@ -125,5 +125,60 @@ func Logging(closures ...func(*http.Request) []zapcore.Field) Middleware {
 
 			h.ServeHTTP(wrappedWriter, r)
 		})
+	}
+}
+
+// NewStandardZapLevelConfig retuns a sensible [config](https://godoc.org/go.uber.org/zap#Config) for a Zap logger.
+// @param level - required, a level at or above which the logger will record messages
+func NewStandardZapLevelConfig(level zapcore.Level) (zap.Config) {
+	return zap.Config{
+		Level:       zap.NewAtomicLevelAt(level),
+		Development: false,
+		Sampling: &zap.SamplingConfig{
+			Initial:    100,
+			Thereafter: 100,
+		},
+		Encoding: "json",
+		EncoderConfig: zapcore.EncoderConfig{
+			TimeKey:        "timestamp",
+			LevelKey:       "level",
+			NameKey:        "logger",
+			CallerKey:      "caller",
+			MessageKey:     "message",
+			StacktraceKey:  "stacktrace",
+			EncodeLevel:    zapcore.LowercaseLevelEncoder,
+			EncodeTime:     zapcore.ISO8601TimeEncoder,
+			EncodeDuration: zapcore.SecondsDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
+		},
+		OutputPaths:      []string{"stdout"},
+		ErrorOutputPaths: []string{"stderr"},
+	}
+}
+
+// NewStandardZapConfig returns a sensible [config](https://godoc.org/go.uber.org/zap#Config) for a Zap logger.
+func NewStandardZapConfig() (zap.Config) {
+	return zap.Config{
+		Level:       zap.NewAtomicLevel(),
+		Development: false,
+		Sampling: &zap.SamplingConfig{
+			Initial:    100,
+			Thereafter: 100,
+		},
+		Encoding: "json",
+		EncoderConfig: zapcore.EncoderConfig{
+			TimeKey:        "timestamp",
+			LevelKey:       "level",
+			NameKey:        "logger",
+			CallerKey:      "caller",
+			MessageKey:     "message",
+			StacktraceKey:  "stacktrace",
+			EncodeLevel:    zapcore.LowercaseLevelEncoder,
+			EncodeTime:     zapcore.ISO8601TimeEncoder,
+			EncodeDuration: zapcore.SecondsDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
+		},
+		OutputPaths:      []string{"stdout"},
+		ErrorOutputPaths: []string{"stderr"},
 	}
 }

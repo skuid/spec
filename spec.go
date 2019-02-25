@@ -32,6 +32,7 @@ package spec
 import (
 	"flag"
 
+	"github.com/skuid/spec/middlewares"
 	"github.com/spf13/pflag"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -87,35 +88,15 @@ func LevelPflagPCommandLine(name, shorthand string, defaultLevel zapcore.Level, 
 	return level
 }
 
+
+
 // NewStandardLevelLogger creates a new zap.Logger based on common
 // configuration. It accepts a zapcore.Level as the level to filter logs on.
 //
 // This is intended to be used with zap.ReplaceGlobals() in an application's
 // main.go.
 func NewStandardLevelLogger(level zapcore.Level) (l *zap.Logger, err error) {
-	config := zap.Config{
-		Level:       zap.NewAtomicLevelAt(level),
-		Development: false,
-		Sampling: &zap.SamplingConfig{
-			Initial:    100,
-			Thereafter: 100,
-		},
-		Encoding: "json",
-		EncoderConfig: zapcore.EncoderConfig{
-			TimeKey:        "timestamp",
-			LevelKey:       "level",
-			NameKey:        "logger",
-			CallerKey:      "caller",
-			MessageKey:     "message",
-			StacktraceKey:  "stacktrace",
-			EncodeLevel:    zapcore.LowercaseLevelEncoder,
-			EncodeTime:     zapcore.ISO8601TimeEncoder,
-			EncodeDuration: zapcore.SecondsDurationEncoder,
-			EncodeCaller:   zapcore.ShortCallerEncoder,
-		},
-		OutputPaths:      []string{"stdout"},
-		ErrorOutputPaths: []string{"stderr"},
-	}
+	config := middlewares.NewStandardZapLevelConfig(level)
 	return config.Build()
 }
 
@@ -124,28 +105,6 @@ func NewStandardLevelLogger(level zapcore.Level) (l *zap.Logger, err error) {
 // This is intended to be used with zap.ReplaceGlobals() in an application's
 // main.go.
 func NewStandardLogger() (l *zap.Logger, err error) {
-	config := zap.Config{
-		Level:       zap.NewAtomicLevel(),
-		Development: false,
-		Sampling: &zap.SamplingConfig{
-			Initial:    100,
-			Thereafter: 100,
-		},
-		Encoding: "json",
-		EncoderConfig: zapcore.EncoderConfig{
-			TimeKey:        "timestamp",
-			LevelKey:       "level",
-			NameKey:        "logger",
-			CallerKey:      "caller",
-			MessageKey:     "message",
-			StacktraceKey:  "stacktrace",
-			EncodeLevel:    zapcore.LowercaseLevelEncoder,
-			EncodeTime:     zapcore.ISO8601TimeEncoder,
-			EncodeDuration: zapcore.SecondsDurationEncoder,
-			EncodeCaller:   zapcore.ShortCallerEncoder,
-		},
-		OutputPaths:      []string{"stdout"},
-		ErrorOutputPaths: []string{"stderr"},
-	}
+	config := middlewares.NewStandardZapConfig()
 	return config.Build()
 }
