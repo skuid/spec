@@ -3,6 +3,7 @@ package middlewares
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
@@ -79,6 +80,10 @@ func (d DataDogWriter) Write(p []byte) (n int, err error) {
 	}
 	if d.client != nil && d.client.Tags != nil {
 		tags = append(tags, d.client.Tags...)
+	}
+	if msg.Name == "" {
+		// Event.Title is required, so force msg.Name to be non-empty. os.Args[0] is the executable name.
+		msg.Name = os.Args[0] + " event"
 	}
 	evt := statsd.Event{
 		AlertType: eventMap[msg.Level],
