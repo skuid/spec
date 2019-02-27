@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"time"
 
@@ -43,6 +42,7 @@ var eventMap = map[string]statsd.EventAlertType{
 }
 var iso8601 = "2006-01-02T15:04:05.000Z0700"
 type logMsg struct {
+	// --- explicit log message fields
 	Caller string `json:"caller"`
 	Level string `json:"level"`
 	Message string `json:"message"`
@@ -50,9 +50,21 @@ type logMsg struct {
 	Stacktrace string `json:"stacktrace"`
 	Timestamp string `json:"timestamp"`
 	Tags []string `json:"tags"`
+	// --- HTTP request fields added by middlewares.Logging()
+	Path string `json:"string"`
+	Method string `json:"method"`
+	Status int `json:"status"`
+	Query string `json:"query"`
+	Remote_Addr string `json:"remote_addr"`
+	User_Agent string `json:"user_agent"`
+	Body_Bytes int `json:"body_bytes"`
 }
 func (msg logMsg) Text() string {
-	return fmt.Sprintf("{\"message\": \"%s\", \"caller\": \"%s\", \"stack\": \"%s\"}", msg.Message, msg.Caller, msg.Stacktrace)
+	text, err := json.Marshal(msg)
+	if err != nil {
+		return "Error: log message could not be stringified"
+	}
+	return string(text)
 }
 
 // DataDogWriter implements io.Writer. It should be made into a [WriteSyncer](https://godoc.org/go.uber.org/zap/zapcore#WriteSyncer)
