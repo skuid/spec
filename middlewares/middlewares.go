@@ -15,6 +15,7 @@ import (
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
 // Middleware is a type for decorating requests.
@@ -110,6 +111,14 @@ func Logging(closures ...func(*http.Request) []zapcore.Field) Middleware {
 					zap.Int("body_bytes", wrappedWriter.bodyBytes),
 				}
 
+				if span, ok := tracer.SpanFromContext(r.Context()); ok {
+					if userID := span.BaggageItem("user.id"); userID != "" {
+						fields = append(fields, zap.String("userId", userID))
+					}
+					if orgID := span.BaggageItem("site.id"); orgID != "" {
+						fields = append(fields, zap.String("siteId", orgID))
+					}
+				}
 				for _, f := range closures {
 					fields = append(fields, f(r)...)
 				}

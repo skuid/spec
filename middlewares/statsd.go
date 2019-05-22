@@ -31,34 +31,37 @@ func Client() *statsd.Client {
 	return c
 }
 
-
 // Hardcoded maps and values used in DataDogWriter.Write() for constructing a statsd Event from a log message buffer.
 var eventMap = map[string]statsd.EventAlertType{
-	"debug": statsd.Success,
-	"info": statsd.Info,
+	"debug":   statsd.Success,
+	"info":    statsd.Info,
 	"warning": statsd.Warning,
-	"error": statsd.Error,
-	"fatal": statsd.Error,
+	"error":   statsd.Error,
+	"fatal":   statsd.Error,
 }
 var iso8601 = "2006-01-02T15:04:05.000Z0700"
+
 type logMsg struct {
 	// --- explicit log message fields
-	Caller string `json:"caller"`
-	Level string `json:"level"`
-	Message string `json:"message"`
-	Name string `json:"name"`
-	Stacktrace string `json:"stacktrace"`
-	Timestamp string `json:"timestamp"`
-	Tags []string `json:"tags"`
+	Caller     string   `json:"caller"`
+	Level      string   `json:"level"`
+	Message    string   `json:"message"`
+	Name       string   `json:"name"`
+	Stacktrace string   `json:"stacktrace"`
+	Timestamp  string   `json:"timestamp"`
+	Tags       []string `json:"tags"`
 	// --- HTTP request fields added by middlewares.Logging()
-	Path string `json:"string"`
-	Method string `json:"method"`
-	Status int `json:"status"`
-	Query string `json:"query"`
-	Remote_Addr string `json:"remote_addr"`
-	User_Agent string `json:"user_agent"`
-	Body_Bytes int `json:"body_bytes"`
+	Path       string `json:"string"`
+	Method     string `json:"method"`
+	Status     int    `json:"status"`
+	Query      string `json:"query"`
+	RemoteAddr string `json:"remote_addr"`
+	UserAgent  string `json:"user_agent"`
+	BodyBytes  int    `json:"body_bytes"`
+	UserID     string `json:"userId"`
+	SiteID     string `json:"siteId"`
 }
+
 func (msg logMsg) Text() string {
 	text, err := json.Marshal(msg)
 	if err != nil {
