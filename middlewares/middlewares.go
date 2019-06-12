@@ -114,7 +114,7 @@ func Logging(closures ...func(*http.Request) []zapcore.Field) Middleware {
 					fields = append(fields, zap.String("userId", userID))
 				}
 				if orgID, err := OrgIDFromContext(r.Context()); err == nil {
-					fields = append(fields, zap.String("siteID", orgID))
+					fields = append(fields, zap.String("siteId", orgID))
 				}
 				for _, f := range closures {
 					fields = append(fields, f(r)...)
