@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -87,14 +88,14 @@ func getRemoteAddr(r *http.Request) string {
 	return stripPort(r.RemoteAddr)
 }
 
-// Logging is a middleware for adding a request log. Logs contains the following
+// Logging is a mux middleware for adding a request log. Logs contains the following
 // fields: level, timestamp, response_time, message, path, method, status, query,
 // remote_addr, user_agent, and body_bytes.
 //
 // Logging accepts an optional list of closures that accept the incoming request
 // and return a slice of zapcore.Field. Each closure is evaluated and its response
 // fields are appended to the logged message after the request is handled
-func Logging(closures ...func(*http.Request) []zapcore.Field) Middleware {
+func Logging(closures ...func(*http.Request) []zapcore.Field) mux.MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			wrappedWriter := &statusLoggingResponseWriter{w, http.StatusOK, 0}
