@@ -108,7 +108,7 @@ func TestLoggingClosures(t *testing.T) {
 
 	req, err := http.NewRequest(http.MethodGet, "/test", nil)
 	if err != nil {
-		t.Fatalf("Error making request to test server: %s", err.Error())
+		t.Fatalf("Error forming request to test server: %s", err.Error())
 	}
 	req.Header.Set("user", "alfanzo")
 	router.ServeHTTP(rr, req)
