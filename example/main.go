@@ -78,7 +78,6 @@ func main() {
 	handler := middlewares.Apply(
 		mux,
 		middlewares.InstrumentRoute(),
-		middlewares.Logging(),
 		middlewares.AccessControlAllowOrigin("*"),
 		middlewares.AddHeaders(map[string]string{"X-Frame-Options": "DENY"}),
 	)
