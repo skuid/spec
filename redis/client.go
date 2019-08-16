@@ -12,8 +12,8 @@ package redis
 import (
 	"os"
 
-	"github.com/go-redis/cache"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/cache/v7"
+	"github.com/go-redis/redis/v7"
 	"gopkg.in/vmihailenco/msgpack.v2"
 )
 

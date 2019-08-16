@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/go-redis/cache"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/cache/v7"
+	"github.com/go-redis/redis/v7"
 )
 
 func TestClientConnectsAsExpected(t *testing.T) {
