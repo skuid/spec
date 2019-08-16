@@ -31,6 +31,23 @@ func OrgIDFromContext(ctx context.Context) (string, error) {
 	return orgIDString, nil
 }
 
+// SubdomainFromContext retrieves an organization's subdomain value stored in a context
+func SubdomainFromContext(ctx context.Context) (string, error) {
+	u := ctx.Value(userContextKey)
+	if u == nil {
+		return "", errors.New("User is not stored in given context")
+	}
+	subdomain, ok := u.(map[string]interface{})["subdomain"]
+	if !ok {
+		return "", errors.New("subdomain is not stored in given context")
+	}
+	subdomainString, ok := subdomain.(string)
+	if !ok || subdomainString == "" {
+		return "", errors.New("subdomain not stored as string in given context")
+	}
+	return subdomainString, nil
+}
+
 // UserIDFromContext retrieves an organization ID value stored in a context
 func UserIDFromContext(ctx context.Context) (string, error) {
 	u := ctx.Value(userContextKey)
@@ -50,8 +67,14 @@ func UserIDFromContext(ctx context.Context) (string, error) {
 
 // ContextWithUser places a user ID value, org Id value, and admin bool into a context using the same context user key
 func ContextWithUser(ctx context.Context, userID string, orgID string, admin bool) context.Context {
+	return ContextWithSiteAndUserInfo(ctx, userID, orgID, "", admin)
+}
+
+// ContextWithUser places a user ID value, site Id, site subdomain, and admin bool into a context using the same context user key
+func ContextWithSiteAndUserInfo(ctx context.Context, userID string, orgID string, subdomain string, admin bool) context.Context {
 	userValues := map[string]interface{}{
 		"orgID":  orgID,
+		"subdomain": subdomain,
 		"userID": userID,
 		"admin":  admin,
 	}

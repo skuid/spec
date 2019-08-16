@@ -117,6 +117,9 @@ func Logging(closures ...func(*http.Request) []zapcore.Field) mux.MiddlewareFunc
 				if orgID, err := OrgIDFromContext(r.Context()); err == nil {
 					fields = append(fields, zap.String("siteId", orgID))
 				}
+				if subdomain, err := SubdomainFromContext(r.Context()); err == nil {
+					fields = append(fields, zap.String("subdomain", subdomain))
+				}
 				for _, f := range closures {
 					fields = append(fields, f(r)...)
 				}
