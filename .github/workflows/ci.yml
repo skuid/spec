@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
     - name: Set up Go 1.13
@@ -34,7 +34,7 @@ jobs:
         fi
 
     - name: Test
-      run: go test -race -timeout 3m -v ./...
+      run: go test -race -timeout 3m -cover -v ./...
 
     - name: Golint
       run: |
