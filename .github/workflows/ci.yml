@@ -10,6 +10,10 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis
+
     steps:
     - name: Set up Go 1.13
       uses: actions/setup-go@v2
@@ -42,4 +46,4 @@ jobs:
     - name: Spelling
       run: |
         go get -u github.com/client9/misspell/cmd/misspell
-        find . -name '*.go' -not -path './vendor/*' -not -path './_repos/*' | xargs misspell -error
+        find . -name '*.go' -not -path './vendor/*' -not -path './_repos/*' | xargs misspell
