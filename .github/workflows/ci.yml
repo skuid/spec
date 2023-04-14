@@ -40,8 +40,6 @@ jobs:
       run: go vet $(go list ./...)
 
     - name: Spelling
-      env:
-        PATH: $PATH:/root/go/bin
       run: |
         go get -u github.com/client9/misspell/cmd/misspell
         find . -name '*.go' -not -path './vendor/*' -not -path './_repos/*' | xargs misspell
