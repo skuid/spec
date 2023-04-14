@@ -12,6 +12,8 @@ time using the go link flag "-X" like so:
 */
 
 var (
-	Commit    = "HEAD"            // Commit is used to surface which commit is at the HEAD
-	GoVersion = runtime.Version() // GoVersion is used to surface which version of golang is being used
+	// Commit is used to surface which commit is at the HEAD
+	Commit = "HEAD"
+	// GoVersion is used to surface which version of golang is being used
+	GoVersion = runtime.Version()
 )

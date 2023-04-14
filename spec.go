@@ -50,7 +50,7 @@ func LevelPflag(name string, defaultLevel zapcore.Level, usage string) (*pflag.F
 	return pflag.PFlagFromGoFlag(set.Lookup(name)), &lvl
 }
 
-// LevelPflag returns a *zapcore.Level for the given flag arguments. The flag is
+// LevelPflagCommandLine returns a *zapcore.Level for the given flag arguments. The flag is
 // added to the pflag.CommandLine flagset
 //
 //	level := spec.LevelPflagCommandLine("level", zapcore.InfoLevel, "Log level")
@@ -76,7 +76,7 @@ func LevelPflagP(name, shorthand string, defaultLevel zapcore.Level, usage strin
 	return response, &lvl
 }
 
-// LevelPflag returns a *zapcore.Level for the given flag arguments. The flag is
+// LevelPflagPCommandLine returns a *zapcore.Level for the given flag arguments. The flag is
 // added to the pflag.CommandLine flagset
 //
 //	level := spec.LevelPflagPCommandLine("level", "l", zapcore.InfoLevel, "Log level")

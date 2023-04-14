@@ -15,6 +15,9 @@ var logLevels = map[string]zapcore.Level{
 	"fatal":   zap.FatalLevel,
 }
 
+// GetLogLevel get a zapcore level from an string
+//
+// levels can be debug, info, warning, error, dpanic, panic, fatal
 func GetLogLevel(level string) zapcore.Level {
 	if v, ok := logLevels[level]; ok {
 		return v
