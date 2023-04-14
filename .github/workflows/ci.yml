@@ -41,5 +41,6 @@ jobs:
 
     - name: Spelling
       run: |
-        go get -u github.com/client9/misspell/cmd/misspell
+        go install github.com/client9/misspell/cmd/misspell@latest
+        export PATH=$PATH:$(go env GOPATH)/bin
         find . -name '*.go' -not -path './vendor/*' -not -path './_repos/*' | xargs misspell
