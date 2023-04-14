@@ -37,9 +37,10 @@ jobs:
       run: go test -race -timeout 3m -cover -v ./...
 
     - name: Golint
+      env:
+        PATH: ${{ env.PATH }}:/home/runner/go/bin
       run: |
         go get -u golang.org/x/lint/golint
-        export PATH=$PATH:$(go env GOPATH)/bin
         golint ./...
       
     - name: Go vet
