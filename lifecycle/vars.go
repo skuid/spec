@@ -64,7 +64,7 @@ func ReadinessHandler(w http.ResponseWriter, r *http.Request) {
 
 func init() {
 
-	termChan := make(chan os.Signal)
+	termChan := make(chan os.Signal, 1)
 	signal.Notify(termChan, term)
 
 	go func() {
