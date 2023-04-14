@@ -35,13 +35,6 @@ jobs:
 
     - name: Test
       run: go test -race -timeout 3m -cover -v ./...
-
-    - name: Golint
-      env:
-        PATH: ${{ env.PATH }}:/home/runner/go/bin
-      run: |
-        go get -u golang.org/x/lint/golint
-        golint ./...
       
     - name: Go vet
       run: go vet $(go list ./...)
