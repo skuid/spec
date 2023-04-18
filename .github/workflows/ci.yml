@@ -11,10 +11,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Go 1.13
+    - name: Set up Go 1.18
       uses: actions/setup-go@v2
       with:
-        go-version: 1.13.x
+        go-version: 1.18.x
       id: go
 
     - name: Set up Redis
@@ -38,7 +38,8 @@ jobs:
 
     - name: Golint
       run: |
-        go get -u golang.org/x/lint/golint
+        go install golang.org/x/lint/golint@latest
+        export PATH=$PATH:$(go env GOPATH)/bin
         golint ./...
       
     - name: Go vet
@@ -46,5 +47,6 @@ jobs:
 
     - name: Spelling
       run: |
-        go get -u github.com/client9/misspell/cmd/misspell
+        go install github.com/client9/misspell/cmd/misspell@latest
+        export PATH=$PATH:$(go env GOPATH)/bin
         find . -name '*.go' -not -path './vendor/*' -not -path './_repos/*' | xargs misspell

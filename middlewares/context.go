@@ -70,13 +70,13 @@ func ContextWithUser(ctx context.Context, userID string, orgID string, admin boo
 	return ContextWithSiteAndUserInfo(ctx, userID, orgID, "", admin)
 }
 
-// ContextWithUser places a user ID value, site Id, site subdomain, and admin bool into a context using the same context user key
+// ContextWithSiteAndUserInfo places a user ID value, site Id, site subdomain, and admin bool into a context using the same context user key
 func ContextWithSiteAndUserInfo(ctx context.Context, userID string, orgID string, subdomain string, admin bool) context.Context {
 	userValues := map[string]interface{}{
-		"orgID":  orgID,
+		"orgID":     orgID,
 		"subdomain": subdomain,
-		"userID": userID,
-		"admin":  admin,
+		"userID":    userID,
+		"admin":     admin,
 	}
 	return context.WithValue(ctx, userContextKey, userValues)
 }

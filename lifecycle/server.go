@@ -17,7 +17,7 @@ var term = syscall.SIGTERM
 // when a SIGTERM is received, after ShutdownTimer seconds (default 15)
 func ShutdownOnTerm(srv *http.Server) {
 	// subscribe to SIGTERM signal
-	c := make(chan os.Signal)
+	c := make(chan os.Signal, 1)
 	signal.Notify(c, term)
 
 	go func() {

@@ -138,9 +138,9 @@ func Logging(closures ...func(*http.Request) []zapcore.Field) mux.MiddlewareFunc
 	}
 }
 
-// NewStandardZapLevelConfig retuns a sensible [config](https://godoc.org/go.uber.org/zap#Config) for a Zap logger.
+// NewStandardZapLevelConfig returns a sensible [config](https://godoc.org/go.uber.org/zap#Config) for a Zap logger.
 // @param level - required, a level at or above which the logger will record messages
-func NewStandardZapLevelConfig(level zapcore.Level) (zap.Config) {
+func NewStandardZapLevelConfig(level zapcore.Level) zap.Config {
 	return zap.Config{
 		Level:       zap.NewAtomicLevelAt(level),
 		Development: false,
@@ -167,7 +167,7 @@ func NewStandardZapLevelConfig(level zapcore.Level) (zap.Config) {
 }
 
 // NewStandardZapConfig returns a sensible [config](https://godoc.org/go.uber.org/zap#Config) for a Zap logger.
-func NewStandardZapConfig() (zap.Config) {
+func NewStandardZapConfig() zap.Config {
 	return zap.Config{
 		Level:       zap.NewAtomicLevel(),
 		Development: false,

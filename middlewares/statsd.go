@@ -11,12 +11,14 @@ import (
 )
 
 var c *statsd.Client
+var maxBytesPerPayload = statsd.OptimalUDPPayloadSize
 
 // InitClient accepts config parameters and builds the dogstatsd Client, accessible by the getter Client()
 // An error is returned only if a problem is encountered setting up the Client.
 func InitClient(host string, port string, prefix string, globalTags []string) error {
 	var err error
-	c, err = statsd.New(host + ":" + port)
+	// WithMaxBytesPerPayload optimal value is 1432, stacktrace is bigger than that, so remove it for keeping safe
+	c, err = statsd.New(host+":"+port, statsd.WithMaxBytesPerPayload(maxBytesPerPayload))
 	if err != nil {
 		return err
 	}
@@ -43,15 +45,14 @@ var iso8601 = "2006-01-02T15:04:05.000Z0700"
 
 type logMsg struct {
 	// --- explicit log message fields
-	Caller     string   `json:"caller"`
-	Level      string   `json:"level"`
-	Message    string   `json:"message"`
-	Name       string   `json:"name"`
-	Stacktrace string   `json:"stacktrace"`
-	Timestamp  string   `json:"timestamp"`
-	Tags       []string `json:"tags"`
+	Caller    string   `json:"caller"`
+	Level     string   `json:"level"`
+	Message   string   `json:"message"`
+	Name      string   `json:"name"`
+	Timestamp string   `json:"timestamp"`
+	Tags      []string `json:"tags"`
 	// --- HTTP request fields added by middlewares.Logging()
-	Path       string `json:"string"`
+	Path       string `json:"path"`
 	Method     string `json:"method"`
 	Status     int    `json:"status"`
 	Query      string `json:"query"`
@@ -67,6 +68,7 @@ func (msg logMsg) Text() string {
 	if err != nil {
 		return "Error: log message could not be stringified"
 	}
+
 	return string(text)
 }
 
@@ -76,6 +78,7 @@ func (msg logMsg) Text() string {
 type DataDogWriter struct {
 	client *statsd.Client
 }
+
 // Write will take a JSON-formatted log message from zap.L().[Level]() as a byte slice, format it, and send it as
 // an Event to d.client.Event().
 // @param p []byte - the byte array of the buffered log message.
@@ -102,9 +105,9 @@ func (d DataDogWriter) Write(p []byte) (n int, err error) {
 	}
 	evt := statsd.Event{
 		AlertType: eventMap[msg.Level],
-		Tags: tags,
-		Title: msg.Name,
-		Text: msg.Text(),
+		Tags:      tags,
+		Title:     msg.Name,
+		Text:      msg.Text(),
 		Timestamp: ts,
 	}
 
@@ -123,7 +126,7 @@ func (d DataDogWriter) Write(p []byte) (n int, err error) {
 
 // DataDogEventLogger will take an already-constructed zap.Logger and a datadog statsd.Client
 // and return a Logger that will also "tee" its output to DataDog Events.
-func DataDogEventLogger(l *zap.Logger, sc *statsd.Client, level zapcore.Level) (*zap.Logger) {
+func DataDogEventLogger(l *zap.Logger, sc *statsd.Client, level zapcore.Level) *zap.Logger {
 	// https://godoc.org/go.uber.org/zap#hdr-Extending_Zap
 	stdZapConfig := NewStandardZapConfig()
 	opts := zap.WrapCore(func(c zapcore.Core) zapcore.Core {
