@@ -6,7 +6,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
@@ -100,18 +99,16 @@ func TestLoggingClosures(t *testing.T) {
 		return []zapcore.Field{zap.String("user", r.Header.Get("user"))}
 	}
 
-	rr := httptest.NewRecorder()
+	server := httptest.NewServer(Logging(closure)(http.HandlerFunc(handleRequest)))
+	defer server.Close()
 
-	router := mux.NewRouter()
-	router.HandleFunc("/test", handleRequest)
-	router.Use(Logging(closure))
-
-	req, err := http.NewRequest(http.MethodGet, "/test", nil)
+	request, _ := http.NewRequest(http.MethodGet, server.URL, nil)
+	request.Header.Add("user", "alfanzo")
+	client := http.Client{}
+	_, err := client.Do(request)
 	if err != nil {
-		t.Fatalf("Error forming request to test server: %s", err.Error())
+		t.Fatalf("Error making request to test server: %s", err.Error())
 	}
-	req.Header.Set("user", "alfanzo")
-	router.ServeHTTP(rr, req)
 
 	logger.Sync()
 	if observed.Len() == 0 {
