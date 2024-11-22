@@ -10,12 +10,23 @@ Helpful links to read up on go middlewares:
 package middlewares
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
+
+func DdogAppName(t string) string {
+	return fmt.Sprintf(
+		"%s.%s.%s",
+		"warden",
+		t,
+		viper.GetString("datadog_app_suffix"),
+	)
+}
 
 // Middleware is a type for decorating requests.
 type Middleware func(http.Handler) http.Handler
