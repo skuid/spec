@@ -115,7 +115,7 @@ func TestLoggingClosures(t *testing.T) {
 		t.Fatal("Expected log! Got no logs")
 	}
 	loggedMessage := observed.All()[0]
-	if loggedMessage.Context[7].String != "alfanzo" {
+	if loggedMessage.Context[8].String != "alfanzo" {
 		t.Errorf("Didn't find alfanzo")
 	}
 }
