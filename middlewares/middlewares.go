@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -109,6 +110,7 @@ func Logging(closures ...func(*http.Request) []zapcore.Field) Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			wrappedWriter := &statusLoggingResponseWriter{w, http.StatusOK, 0}
+			requestTime := time.Now()
 
 			defer func() {
 				fields := []zapcore.Field{
@@ -119,6 +121,7 @@ func Logging(closures ...func(*http.Request) []zapcore.Field) Middleware {
 					zap.String("remote_addr", getRemoteAddr(r)),
 					zap.String("user_agent", r.Header.Get("User-Agent")),
 					zap.Int("body_bytes", wrappedWriter.bodyBytes),
+					zap.Int64("response_time", time.Since(requestTime).Milliseconds()),
 				}
 
 				if userID, err := UserIDFromContext(r.Context()); err == nil {
