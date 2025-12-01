@@ -6,7 +6,7 @@ require (
 	github.com/DataDog/datadog-go v3.7.2+incompatible
 	github.com/go-redis/cache v6.4.0+incompatible
 	github.com/go-redis/redis v6.15.8+incompatible
-	github.com/satori/go.uuid v1.2.0
+	github.com/google/uuid v1.6.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.2.1
 	github.com/stretchr/testify v1.4.0

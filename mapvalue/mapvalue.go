@@ -6,10 +6,10 @@ import (
 	"reflect"
 	"strings"
 
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 )
 
-func IsString(sourceMap map[string]interface{}, key string) error {
+func IsString(sourceMap map[string]any, key string) error {
 	// Check that key exists in map
 	val, ok := sourceMap[key]
 	if !ok {
@@ -24,21 +24,21 @@ func IsString(sourceMap map[string]interface{}, key string) error {
 	return nil
 }
 
-func String(sourceMap map[string]interface{}, key string) string {
+func String(sourceMap map[string]any, key string) string {
 	valAsString, ok := sourceMap[key].(string)
 	if !ok {
 		return ""
 	}
 	return valAsString
 }
-func Bool(sourceMap map[string]interface{}, key string, deflt bool) bool {
+func Bool(sourceMap map[string]any, key string, deflt bool) bool {
 	valAsBool, ok := sourceMap[key].(bool)
 	if !ok {
 		return deflt
 	}
 	return valAsBool
 }
-func Integer(sourceMap map[string]interface{}, key string) int {
+func Integer(sourceMap map[string]any, key string) int {
 	valAsFloat, ok := sourceMap[key].(float64)
 	if !ok {
 		return 0
@@ -46,7 +46,7 @@ func Integer(sourceMap map[string]interface{}, key string) int {
 	return int(valAsFloat)
 }
 
-func IsMapSlice(sourceMap map[string]interface{}, key string) error {
+func IsMapSlice(sourceMap map[string]any, key string) error {
 	// Check that key exists in map
 	val, ok := sourceMap[key]
 	if !ok {
@@ -54,14 +54,14 @@ func IsMapSlice(sourceMap map[string]interface{}, key string) error {
 	}
 
 	// Check that value of key is a slice
-	valAsSlice, ok := val.([]interface{})
+	valAsSlice, ok := val.([]any)
 	if !ok {
 		return fmt.Errorf("%s found with wrong type: expected JSON array", key)
 	}
 
 	// Check that the value of each element is a map
 	for index, nestedValue := range valAsSlice {
-		_, ok = nestedValue.(map[string]interface{})
+		_, ok = nestedValue.(map[string]any)
 		if !ok {
 			return fmt.Errorf("Object at index %d in array found with wrong type: expected JSON object", index)
 		}
@@ -70,33 +70,33 @@ func IsMapSlice(sourceMap map[string]interface{}, key string) error {
 	return nil
 }
 
-func MapSlice(sourceMap map[string]interface{}, key string) []map[string]interface{} {
-	var valAsMapSlice []map[string]interface{}
-	// The type switch statement here complicates things, but it allows us to handle unmarshaled []interface{} slices
-	// as well as already strongly-typed []map[string]interface{}, without worrying about the underlying abstraction.
+func MapSlice(sourceMap map[string]any, key string) []map[string]any {
+	var valAsMapSlice []map[string]any
+	// The type switch statement here complicates things, but it allows us to handle unmarshaled []any slices
+	// as well as already strongly-typed []map[string]any, without worrying about the underlying abstraction.
 	switch sourceMap[key].(type) {
-	case []interface{}:
-		// If sourceMap has the type []interface{}, then cast each value into a more strongly typed container.
-		temp := sourceMap[key].([]interface{})
-		valAsMapSlice = make([]map[string]interface{}, len(temp))
+	case []any:
+		// If sourceMap has the type []any, then cast each value into a more strongly typed container.
+		temp := sourceMap[key].([]any)
+		valAsMapSlice = make([]map[string]any, len(temp))
 		for i, v := range temp {
-			castVal, ok := v.(map[string]interface{})
+			castVal, ok := v.(map[string]any)
 			if !ok {
-				return []map[string]interface{}{}
+				return []map[string]any{}
 			}
 			valAsMapSlice[i] = castVal
 		}
-	case []map[string]interface{}:
-		// If sourceMap[key] is already typed as []map[string]interface{}, then we're fine and can proceed without casting each value.
-		valAsMapSlice = sourceMap[key].([]map[string]interface{})
+	case []map[string]any:
+		// If sourceMap[key] is already typed as []map[string]any, then we're fine and can proceed without casting each value.
+		valAsMapSlice = sourceMap[key].([]map[string]any)
 	default:
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 	return valAsMapSlice
 }
 
-func StringSlice(sourceMap map[string]interface{}, key string) []string {
-	valAsSlice, ok := sourceMap[key].([]interface{})
+func StringSlice(sourceMap map[string]any, key string) []string {
+	valAsSlice, ok := sourceMap[key].([]any)
 	if !ok {
 		return []string{}
 	}
@@ -111,7 +111,7 @@ func StringSlice(sourceMap map[string]interface{}, key string) []string {
 	return valAsStringSlice
 }
 
-func CastInterface(in interface{}, out interface{}) error {
+func CastInterface(in any, out any) error {
 	if reflect.ValueOf(out).Kind() != reflect.Ptr {
 		return fmt.Errorf("out must be a pointer")
 	}
@@ -127,7 +127,7 @@ func CastInterface(in interface{}, out interface{}) error {
 	return err
 }
 
-func IsMap(sourceMap map[string]interface{}, key string) error {
+func IsMap(sourceMap map[string]any, key string) error {
 	// Check that key exists in map
 	val, ok := sourceMap[key]
 	if !ok {
@@ -135,7 +135,7 @@ func IsMap(sourceMap map[string]interface{}, key string) error {
 	}
 
 	// Check that value of key is a map
-	_, ok = val.(map[string]interface{})
+	_, ok = val.(map[string]any)
 	if !ok {
 		return fmt.Errorf("%s found with wrong type: expected JSON object", key)
 	}
@@ -143,10 +143,10 @@ func IsMap(sourceMap map[string]interface{}, key string) error {
 	return nil
 }
 
-func Map(sourceMap map[string]interface{}, key string) map[string]interface{} {
-	val, ok := sourceMap[key].(map[string]interface{})
+func Map(sourceMap map[string]any, key string) map[string]any {
+	val, ok := sourceMap[key].(map[string]any)
 	if !ok {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 	return val
 }
@@ -170,12 +170,12 @@ func StringSliceContainsKeyCaseInsensitive(items []string, item string) (bool, s
 }
 
 func IsValidUUID(u string) bool {
-	_, err := uuid.FromString(u)
+	_, err := uuid.Parse(u)
 	return err == nil
 }
 
-func CopyMap(in map[string]interface{}) map[string]interface{} {
-	out := make(map[string]interface{})
+func CopyMap(in map[string]any) map[string]any {
+	out := make(map[string]any)
 
 	for k, v := range in {
 		out[k] = v
@@ -190,7 +190,7 @@ func Pop(slice []string) (string, []string) {
 
 // CombineStructWithMap takes a map and adds its values into the struct behind an interface,
 // creating a new struct of that type
-func CombineStructWithMap(s interface{}, m map[string]interface{}) (interface{}, error) {
+func CombineStructWithMap(s any, m map[string]any) (any, error) {
 	typeof := reflect.TypeOf(s)
 	newval := reflect.New(typeof).Elem()
 	sourceval := reflect.ValueOf(s)
@@ -208,7 +208,7 @@ func CombineStructWithMap(s interface{}, m map[string]interface{}) (interface{},
 
 // setMaybe will take a map, an array of keys, a default reflect.Value, and a val *reflect.Value
 // If any of the keys are in map m, and the type matches, it will set val to m[name], otherwise default.
-func setMaybe(m map[string]interface{}, names []string, defaultVal reflect.Value, val *reflect.Value) {
+func setMaybe(m map[string]any, names []string, defaultVal reflect.Value, val *reflect.Value) {
 	for _, name := range names {
 		if mf, ok := m[name]; ok && val.Type() == reflect.TypeOf(mf) && val.CanSet() {
 			val.Set(reflect.ValueOf(mf))
@@ -218,7 +218,7 @@ func setMaybe(m map[string]interface{}, names []string, defaultVal reflect.Value
 	val.Set(defaultVal)
 }
 
-func GetValue(in interface{}, key string) (value string, err error) {
+func GetValue(in any, key string) (value string, err error) {
 	valOf := reflect.ValueOf(in)
 	err = fmt.Errorf("key not found")
 

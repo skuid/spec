@@ -54,7 +54,7 @@ func TestCacheConnectsAsExpected(t *testing.T) {
 	type TestObject struct {
 		TestString    string
 		TestNumerical int
-		SubObject     interface{}
+		SubObject     any
 	}
 
 	cases := []struct {
