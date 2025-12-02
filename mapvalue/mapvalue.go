@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid/v5"
 )
 
 func IsString(sourceMap map[string]any, key string) error {
@@ -170,7 +170,7 @@ func StringSliceContainsKeyCaseInsensitive(items []string, item string) (bool, s
 }
 
 func IsValidUUID(u string) bool {
-	_, err := uuid.Parse(u)
+	_, err := uuid.FromString(u)
 	return err == nil
 }
 
