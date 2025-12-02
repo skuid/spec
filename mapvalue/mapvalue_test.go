@@ -278,3 +278,28 @@ func TestCombineStructWithMap(t *testing.T) {
 		assert.Equal(t, nil, err)
 	})
 }
+
+func TestIsValidUUID(t *testing.T) {
+	t.Run("should return true for valid UUIDs", func(t *testing.T) {
+		validUUIDs := []string{
+			"6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+			"123e4567-e89b-12d3-a456-426614174000",
+			"00000000-0000-0000-0000-000000000000",
+		}
+		for _, uuid := range validUUIDs {
+			assert.True(t, IsValidUUID(uuid), "Expected valid UUID: %s", uuid)
+		}
+	})
+
+	t.Run("should return false for invalid UUIDs", func(t *testing.T) {
+		invalidUUIDs := []string{
+			"not-a-uuid",
+			"12345678-1234-1234-1234-1234567890",
+			"g123e4567-e89b-12d3-a456-426614174000",
+			"",
+		}
+		for _, uuid := range invalidUUIDs {
+			assert.False(t, IsValidUUID(uuid), "Expected invalid UUID: %s", uuid)
+		}
+	})
+}
