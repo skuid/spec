@@ -7,14 +7,14 @@ import (
 )
 
 func TestIsString(t *testing.T) {
-	places := map[string]interface{}{
+	places := map[string]any{
 		"taco mamacita": "north shore",
 		"stir":          "southside",
 		"chili's":       []string{"downtown", "near the mall"},
 	}
 	cases := []struct {
 		testDescription string
-		source          map[string]interface{}
+		source          map[string]any
 		key             string
 		wantErrorMsg    string
 	}{
@@ -48,14 +48,14 @@ func TestIsString(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
-	places := map[string]interface{}{
+	places := map[string]any{
 		"taco mamacita": "north shore",
 		"stir":          "southside",
 		"chili's":       []string{"downtown", "near the mall"},
 	}
 	cases := []struct {
 		testDescription string
-		source          map[string]interface{}
+		source          map[string]any
 		key             string
 		wantReturn      string
 	}{
@@ -85,14 +85,14 @@ func TestString(t *testing.T) {
 }
 
 func TestIsMapSlice(t *testing.T) {
-	places := map[string]interface{}{
+	places := map[string]any{
 		"restaurants": "main street meats",
-		"bars":        []interface{}{map[string]interface{}{"stir": "southside"}, map[string]interface{}{"mike's": "northshore"}},
-		"gyms":        []interface{}{"non map interface", map[string]interface{}{"sportsbarn": "downtown"}},
+		"bars":        []any{map[string]any{"stir": "southside"}, map[string]any{"mike's": "northshore"}},
+		"gyms":        []any{"non map interface", map[string]any{"sportsbarn": "downtown"}},
 	}
 	cases := []struct {
 		testDescription string
-		source          map[string]interface{}
+		source          map[string]any
 		key             string
 		wantErrorMsg    string
 	}{
@@ -132,40 +132,40 @@ func TestIsMapSlice(t *testing.T) {
 }
 
 func TestMapSlice(t *testing.T) {
-	places := map[string]interface{}{
+	places := map[string]any{
 		"restaurants": "main street meats",
-		"bars":        []interface{}{map[string]interface{}{"stir": "southside"}, map[string]interface{}{"mike's": "northshore"}},
-		"gyms":        []interface{}{"non map interface", map[string]interface{}{"sportsbarn": "downtown"}},
+		"bars":        []any{map[string]any{"stir": "southside"}, map[string]any{"mike's": "northshore"}},
+		"gyms":        []any{"non map interface", map[string]any{"sportsbarn": "downtown"}},
 	}
 	cases := []struct {
 		testDescription string
-		source          map[string]interface{}
+		source          map[string]any
 		key             string
-		wantReturn      []map[string]interface{}
+		wantReturn      []map[string]any
 	}{
 		{
 			"Should return value when value found as map slice",
 			places,
 			"bars",
-			[]map[string]interface{}{{"stir": "southside"}, {"mike's": "northshore"}},
+			[]map[string]any{{"stir": "southside"}, {"mike's": "northshore"}},
 		},
 		{
 			"Should return empty slice when value missing",
 			places,
 			"offices",
-			[]map[string]interface{}{},
+			[]map[string]any{},
 		},
 		{
 			"Should return empty slice when value exists with wrong type",
 			places,
 			"restaurants",
-			[]map[string]interface{}{},
+			[]map[string]any{},
 		},
 		{
 			"Should return empty slice when nested value exists with wrong type",
 			places,
 			"gyms",
-			[]map[string]interface{}{},
+			[]map[string]any{},
 		},
 	}
 	for _, c := range cases {
@@ -175,13 +175,13 @@ func TestMapSlice(t *testing.T) {
 }
 
 func TestIsMap(t *testing.T) {
-	places := map[string]interface{}{
+	places := map[string]any{
 		"restaurants": "main street meats",
-		"bars":        map[string]interface{}{"stir": "southside"},
+		"bars":        map[string]any{"stir": "southside"},
 	}
 	cases := []struct {
 		testDescription string
-		source          map[string]interface{}
+		source          map[string]any
 		key             string
 		wantErrorMsg    string
 	}{
@@ -215,33 +215,33 @@ func TestIsMap(t *testing.T) {
 }
 
 func TestMap(t *testing.T) {
-	places := map[string]interface{}{
+	places := map[string]any{
 		"restaurants": "main street meats",
-		"bars":        map[string]interface{}{"stir": "southside"},
+		"bars":        map[string]any{"stir": "southside"},
 	}
 	cases := []struct {
 		testDescription string
-		source          map[string]interface{}
+		source          map[string]any
 		key             string
-		wantReturn      map[string]interface{}
+		wantReturn      map[string]any
 	}{
 		{
 			"Should return value when value found as map",
 			places,
 			"bars",
-			map[string]interface{}{"stir": "southside"},
+			map[string]any{"stir": "southside"},
 		},
 		{
 			"Should return empty map when value missing",
 			places,
 			"offices",
-			map[string]interface{}{},
+			map[string]any{},
 		},
 		{
 			"Should return empty slice when value exists with wrong type",
 			places,
 			"restaurants",
-			map[string]interface{}{},
+			map[string]any{},
 		},
 	}
 	for _, c := range cases {
@@ -263,7 +263,7 @@ func TestCombineStructWithMap(t *testing.T) {
 			19.00,
 			"sock",
 		}
-		inputMap := map[string]interface{}{
+		inputMap := map[string]any{
 			"Quantity": 1,
 			"Name":     "box",
 		}
@@ -276,5 +276,30 @@ func TestCombineStructWithMap(t *testing.T) {
 		outputStruct, err := CombineStructWithMap(inputStruct, inputMap)
 		assert.Equal(t, wantStruct, outputStruct)
 		assert.Equal(t, nil, err)
+	})
+}
+
+func TestIsValidUUID(t *testing.T) {
+	t.Run("should return true for valid UUIDs", func(t *testing.T) {
+		validUUIDs := []string{
+			"6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+			"123e4567-e89b-12d3-a456-426614174000",
+			"00000000-0000-0000-0000-000000000000",
+		}
+		for _, uuid := range validUUIDs {
+			assert.True(t, IsValidUUID(uuid), "Expected valid UUID: %s", uuid)
+		}
+	})
+
+	t.Run("should return false for invalid UUIDs", func(t *testing.T) {
+		invalidUUIDs := []string{
+			"not-a-uuid",
+			"12345678-1234-1234-1234-1234567890",
+			"g123e4567-e89b-12d3-a456-426614174000",
+			"",
+		}
+		for _, uuid := range invalidUUIDs {
+			assert.False(t, IsValidUUID(uuid), "Expected invalid UUID: %s", uuid)
+		}
 	})
 }

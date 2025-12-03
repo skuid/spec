@@ -20,7 +20,7 @@ func OrgIDFromContext(ctx context.Context) (string, error) {
 	if u == nil {
 		return "", errors.New("User is not stored in given context")
 	}
-	orgID, ok := u.(map[string]interface{})["orgID"]
+	orgID, ok := u.(map[string]any)["orgID"]
 	if !ok {
 		return "", errors.New("OrgID is not stored in given context")
 	}
@@ -37,7 +37,7 @@ func SubdomainFromContext(ctx context.Context) (string, error) {
 	if u == nil {
 		return "", errors.New("User is not stored in given context")
 	}
-	subdomain, ok := u.(map[string]interface{})["subdomain"]
+	subdomain, ok := u.(map[string]any)["subdomain"]
 	if !ok {
 		return "", errors.New("subdomain is not stored in given context")
 	}
@@ -54,7 +54,7 @@ func UserIDFromContext(ctx context.Context) (string, error) {
 	if u == nil {
 		return "", errors.New("User is not stored in given context")
 	}
-	v, ok := u.(map[string]interface{})["userID"]
+	v, ok := u.(map[string]any)["userID"]
 	if !ok {
 		return "", errors.New("UserID is not stored in given context")
 	}
@@ -72,7 +72,7 @@ func ContextWithUser(ctx context.Context, userID string, orgID string, admin boo
 
 // ContextWithSiteAndUserInfo places a user ID value, site Id, site subdomain, and admin bool into a context using the same context user key
 func ContextWithSiteAndUserInfo(ctx context.Context, userID string, orgID string, subdomain string, admin bool) context.Context {
-	userValues := map[string]interface{}{
+	userValues := map[string]any{
 		"orgID":     orgID,
 		"subdomain": subdomain,
 		"userID":    userID,
@@ -88,7 +88,7 @@ func IsAdminFromContext(ctx context.Context) bool {
 		return false
 	}
 
-	if v, ok := u.(map[string]interface{})["admin"]; !ok || v == false {
+	if v, ok := u.(map[string]any)["admin"]; !ok || v == false {
 		return false
 	}
 	return true

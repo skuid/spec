@@ -63,7 +63,7 @@ func GetMap(key string) (map[string]string, error) {
 
 // Set populates the value of a single string key in cache,
 // and sets an expiration for the cache key (in seconds).
-func Set(key string, value string, expirationSeconds time.Duration) (interface{}, error) {
+func Set(key string, value string, expirationSeconds time.Duration) (any, error) {
 	set := client.Set(key, value, expirationSeconds)
 
 	if set.Err() != nil {
@@ -76,9 +76,9 @@ func Set(key string, value string, expirationSeconds time.Duration) (interface{}
 
 // SetMap takes a map of key-value pairs and populates this in a hash-map cache value,
 // and sets an expiration for the cache key (in seconds).
-func SetMap(key string, obj map[string]string, expiration time.Duration) (interface{}, error) {
+func SetMap(key string, obj map[string]string, expiration time.Duration) (any, error) {
 
-	imap := make(map[string]interface{})
+	imap := make(map[string]any)
 	for k, v := range obj {
 		imap[k] = v
 	}
@@ -91,7 +91,7 @@ func SetMap(key string, obj map[string]string, expiration time.Duration) (interf
 	return pipe.Exec()
 }
 
-func SetMapInterface(key string, obj map[string]interface{}, expiration time.Duration) (interface{}, error) {
+func SetMapInterface(key string, obj map[string]any, expiration time.Duration) (any, error) {
 	pipe := client.Pipeline()
 
 	pipe.HMSet(key, obj)

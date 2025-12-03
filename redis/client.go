@@ -35,10 +35,10 @@ func NewStandardRedisClient(options *redis.Options) *redis.Client {
 func NewStandardRedisCache(options *redis.Options) *cache.Codec {
 	return &cache.Codec{
 		Redis: NewStandardRedisClient(options),
-		Marshal: func(v interface{}) ([]byte, error) {
+		Marshal: func(v any) ([]byte, error) {
 			return msgpack.Marshal(v)
 		},
-		Unmarshal: func(b []byte, v interface{}) error {
+		Unmarshal: func(b []byte, v any) error {
 			return msgpack.Unmarshal(b, v)
 		},
 	}
