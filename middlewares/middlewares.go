@@ -10,6 +10,7 @@ Helpful links to read up on go middlewares:
 package middlewares
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -97,6 +98,37 @@ func getRemoteAddr(r *http.Request) string {
 		return stripPort(address)
 	}
 	return stripPort(r.RemoteAddr)
+}
+
+var iso8601 = "2006-01-02T15:04:05.000Z0700"
+
+type logMsg struct {
+	// --- explicit log message fields
+	Caller    string   `json:"caller"`
+	Level     string   `json:"level"`
+	Message   string   `json:"message"`
+	Name      string   `json:"name"`
+	Timestamp string   `json:"timestamp"`
+	Tags      []string `json:"tags"`
+	// --- HTTP request fields added by middlewares.Logging()
+	Path       string `json:"path"`
+	Method     string `json:"method"`
+	Status     int    `json:"status"`
+	Query      string `json:"query"`
+	RemoteAddr string `json:"remote_addr"`
+	UserAgent  string `json:"user_agent"`
+	BodyBytes  int    `json:"body_bytes"`
+	UserID     string `json:"userId"`
+	SiteID     string `json:"siteId"`
+}
+
+func (msg logMsg) Text() string {
+	text, err := json.Marshal(msg)
+	if err != nil {
+		return "Error: log message could not be stringified"
+	}
+
+	return string(text)
 }
 
 // Logging is a mux middleware for adding a request log. Logs contains the following
