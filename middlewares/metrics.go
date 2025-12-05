@@ -33,8 +33,8 @@ func monitor(verb, path string, httpCode int, reqStart time.Time) {
 		statsdClient.Incr(fmt.Sprintf("http_request_status_%s", statusType(httpCode)), tags[:], 1)
 	}
 
-	// opentelemetry metrics
-	// If global meter provider is not set, GetMeterProvider returns a no-op provider.
+	// opentelemetry metrics - If global meter provider is not set, (i.e. SetupOtelSDK has not been called),
+	// GetMeterProvider returns a no-op provider.
 	oMeter := otel.GetMeterProvider().Meter(
 		"http_metrics",
 		metric.WithInstrumentationAttributes(

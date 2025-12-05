@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -17,11 +18,14 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	logsdk "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
+// https://opentelemetry.io/docs/languages/go/resources/
 // https://opentelemetry.io/docs/languages/go/exporters/
 // https://pkg.go.dev/go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp#example-package
 // https://pkg.go.dev/go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp#example-package
@@ -36,15 +40,12 @@ var severityMap = map[string]log.Severity{
 	"fatal": log.SeverityFatal,
 }
 
-// SetupOTelSDK bootstraps the OpenTelemetry pipeline.
+// SetupOTelSDK bootstraps the OpenTelemetry pipeline. Equivalent to statsd.go InitClient(...).
 // If it does not return an error, make sure to call shutdown for proper cleanup.
-func SetupOTelSDK(ctx context.Context, traceEndpoint, metricEndpoint, logEndpoint string) (func(context.Context) error, error) {
+func SetupOTelSDK(ctx context.Context, traceEndpoint, metricEndpoint, logEndpoint, serviceName string, env string, globalTags []string) (func(context.Context) error, error) {
 	var shutdownFuncs []func(context.Context) error
-	var err error
-
 	// shutdown calls cleanup functions registered via shutdownFuncs.
-	// The errors from the calls are joined.
-	// Each registered cleanup will be invoked once.
+	// The errors from the calls are joined and each registered cleanup will be invoked once.
 	shutdown := func(ctx context.Context) error {
 		var err error
 		for _, fn := range shutdownFuncs {
@@ -54,43 +55,28 @@ func SetupOTelSDK(ctx context.Context, traceEndpoint, metricEndpoint, logEndpoin
 		return err
 	}
 
+	var err error
 	// handleErr calls shutdown for cleanup and makes sure that all errors are returned.
 	handleErr := func(inErr error) {
 		err = errors.Join(inErr, shutdown(ctx))
 	}
 
-	// Set up propagator.
-	prop := newPropagator()
-	otel.SetTextMapPropagator(prop)
-	// Set up trace provider.
-	texp, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(traceEndpoint))
+	var otelResource *resource.Resource
+	otelResource, err = resource.New(
+		ctx,
+		resource.WithProcess(),
+		resource.WithHost(),
+		resource.WithContainer(),
+		resource.WithAttributes(
+			semconv.DeploymentEnvironmentName(env),
+			semconv.ServiceName(serviceName),
+			attribute.StringSlice("tags", globalTags),
+		),
+	)
 	if err != nil {
 		handleErr(err)
 		return shutdown, err
 	}
-	tracerProvider := trace.NewTracerProvider(trace.WithBatcher(texp))
-	shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
-	otel.SetTracerProvider(tracerProvider)
-
-	// Set up meter provider.
-	var meterProvider *metric.MeterProvider
-	if os.Getenv("PROMETHEUS_METRICS") == "true" {
-		exporter, err := prometheus.New()
-		if err != nil {
-			handleErr(err)
-			return shutdown, err
-		}
-		meterProvider = metric.NewMeterProvider(metric.WithReader(exporter))
-	} else {
-		mexp, err := otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpointURL(metricEndpoint))
-		if err != nil {
-			handleErr(err)
-			return shutdown, err
-		}
-		meterProvider = metric.NewMeterProvider(metric.WithReader(metric.NewPeriodicReader(mexp)))
-	}
-	shutdownFuncs = append(shutdownFuncs, meterProvider.Shutdown)
-	otel.SetMeterProvider(meterProvider)
 
 	// Set up logger provider.
 	lexp, err := otlploghttp.New(ctx, otlploghttp.WithEndpointURL(logEndpoint))
@@ -99,18 +85,64 @@ func SetupOTelSDK(ctx context.Context, traceEndpoint, metricEndpoint, logEndpoin
 		return shutdown, err
 	}
 	processor := logsdk.NewBatchProcessor(lexp)
-	loggerProvider := logsdk.NewLoggerProvider(logsdk.WithProcessor(processor))
+	loggerProvider := logsdk.NewLoggerProvider(
+		logsdk.WithProcessor(processor),
+		logsdk.WithResource(otelResource),
+	)
 	shutdownFuncs = append(shutdownFuncs, loggerProvider.Shutdown)
 	global.SetLoggerProvider(loggerProvider)
 
-	return shutdown, err
-}
-
-func newPropagator() propagation.TextMapPropagator {
-	return propagation.NewCompositeTextMapPropagator(
+	// Set up trace provider.
+	prop := propagation.NewCompositeTextMapPropagator(
 		propagation.TraceContext{},
 		propagation.Baggage{},
 	)
+	otel.SetTextMapPropagator(prop)
+	texp, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(traceEndpoint))
+	if err != nil {
+		handleErr(err)
+		return shutdown, err
+	}
+	tracerProvider := trace.NewTracerProvider(
+		trace.WithBatcher(texp),
+		trace.WithResource(otelResource),
+	)
+	shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
+	otel.SetTracerProvider(tracerProvider)
+
+	// Set up meter provider.
+	var meterProvider *metric.MeterProvider
+	var exporter metric.Reader
+	if os.Getenv("PROMETHEUS_METRICS") == "true" {
+		exporter, err = prometheus.New()
+		if err != nil {
+			handleErr(err)
+			return shutdown, err
+		}
+	} else {
+		var mexp metric.Exporter
+		mexp, err = otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpointURL(metricEndpoint))
+		if err != nil {
+			handleErr(err)
+			return shutdown, err
+		}
+		exporter = metric.NewPeriodicReader(mexp)
+	}
+	meterProvider = metric.NewMeterProvider(
+		metric.WithReader(exporter),
+		metric.WithResource(otelResource),
+	)
+	shutdownFuncs = append(shutdownFuncs, meterProvider.Shutdown)
+	otel.SetMeterProvider(meterProvider)
+
+	startMeter, err := meterProvider.Meter("server").Int64Counter("server_start")
+	if err != nil {
+		handleErr(err)
+		return shutdown, err
+	}
+	startMeter.Add(ctx, 1)
+
+	return shutdown, err
 }
 
 type OpenTelemetryWriter struct {
@@ -174,8 +206,8 @@ func OpenTelemetryEventLogger(l *zap.Logger, ctx context.Context, logger log.Log
 			ctx,
 			logger,
 		})
-		datadogCore := zapcore.NewCore(zapcore.NewJSONEncoder(enc), ddw, level)
-		return zapcore.NewTee(c, datadogCore)
+		otelCore := zapcore.NewCore(zapcore.NewJSONEncoder(enc), ddw, level)
+		return zapcore.NewTee(c, otelCore)
 	})
 
 	return l.WithOptions(opts)
