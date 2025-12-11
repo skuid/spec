@@ -2,7 +2,7 @@ module github.com/skuid/spec
 
 go 1.24.0
 
-toolchain go1.24.4
+toolchain go1.24.11
 
 require (
 	github.com/DataDog/datadog-go v3.7.2+incompatible

@@ -145,6 +145,7 @@ func SetupOTelSDK(ctx context.Context, traceEndpoint, metricEndpoint, logEndpoin
 	return shutdown, err
 }
 
+// OpenTelemetryWriter implements io.Writer to send Zap logs to OpenTelemetry as log records.
 type OpenTelemetryWriter struct {
 	ctx    context.Context
 	logger log.Logger
@@ -155,7 +156,6 @@ func (o OpenTelemetryWriter) Write(p []byte) (n int, err error) {
 	if err = json.Unmarshal(p, &msg); err != nil {
 		return
 	}
-	n = len(p)
 
 	var timestamp time.Time
 	timestamp, err = time.Parse(iso8601, msg.Timestamp)
@@ -192,6 +192,7 @@ func (o OpenTelemetryWriter) Write(p []byte) (n int, err error) {
 	record.SetBody(log.StringValue(msg.Text()))
 
 	o.logger.Emit(o.ctx, record)
+	n = len(p)
 	return
 }
 
