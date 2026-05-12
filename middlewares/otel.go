@@ -78,69 +78,75 @@ func SetupOTelSDK(ctx context.Context, traceEndpoint, metricEndpoint, logEndpoin
 		return shutdown, err
 	}
 
-	// Set up logger provider.
-	lexp, err := otlploghttp.New(ctx, otlploghttp.WithEndpointURL(logEndpoint))
-	if err != nil {
-		handleErr(err)
-		return shutdown, err
-	}
-	processor := logsdk.NewBatchProcessor(lexp)
-	loggerProvider := logsdk.NewLoggerProvider(
-		logsdk.WithProcessor(processor),
-		logsdk.WithResource(otelResource),
-	)
-	shutdownFuncs = append(shutdownFuncs, loggerProvider.Shutdown)
-	global.SetLoggerProvider(loggerProvider)
-
-	// Set up trace provider.
-	prop := propagation.NewCompositeTextMapPropagator(
-		propagation.TraceContext{},
-		propagation.Baggage{},
-	)
-	otel.SetTextMapPropagator(prop)
-	texp, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(traceEndpoint))
-	if err != nil {
-		handleErr(err)
-		return shutdown, err
-	}
-	tracerProvider := trace.NewTracerProvider(
-		trace.WithBatcher(texp),
-		trace.WithResource(otelResource),
-	)
-	shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
-	otel.SetTracerProvider(tracerProvider)
-
-	// Set up meter provider.
-	var meterProvider *metric.MeterProvider
-	var exporter metric.Reader
-	if os.Getenv("PROMETHEUS_METRICS") == "true" {
-		exporter, err = prometheus.New()
+	if logEndpoint != "" {
+		// Set up logger provider.
+		lexp, err := otlploghttp.New(ctx, otlploghttp.WithEndpointURL(logEndpoint))
 		if err != nil {
 			handleErr(err)
 			return shutdown, err
 		}
-	} else {
-		var mexp metric.Exporter
-		mexp, err = otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpointURL(metricEndpoint))
+		processor := logsdk.NewBatchProcessor(lexp)
+		loggerProvider := logsdk.NewLoggerProvider(
+			logsdk.WithProcessor(processor),
+			logsdk.WithResource(otelResource),
+		)
+		shutdownFuncs = append(shutdownFuncs, loggerProvider.Shutdown)
+		global.SetLoggerProvider(loggerProvider)
+	}
+
+	if traceEndpoint != "" {
+		// Set up trace provider.
+		prop := propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{},
+			propagation.Baggage{},
+		)
+		otel.SetTextMapPropagator(prop)
+		texp, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(traceEndpoint))
 		if err != nil {
 			handleErr(err)
 			return shutdown, err
 		}
-		exporter = metric.NewPeriodicReader(mexp)
+		tracerProvider := trace.NewTracerProvider(
+			trace.WithBatcher(texp),
+			trace.WithResource(otelResource),
+		)
+		shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
+		otel.SetTracerProvider(tracerProvider)
 	}
-	meterProvider = metric.NewMeterProvider(
-		metric.WithReader(exporter),
-		metric.WithResource(otelResource),
-	)
-	shutdownFuncs = append(shutdownFuncs, meterProvider.Shutdown)
-	otel.SetMeterProvider(meterProvider)
 
-	startMeter, err := meterProvider.Meter("server").Int64Counter("server_start")
-	if err != nil {
-		handleErr(err)
-		return shutdown, err
+	if metricEndpoint != "" {
+		// Set up meter provider.
+		var meterProvider *metric.MeterProvider
+		var exporter metric.Reader
+		if os.Getenv("PROMETHEUS_METRICS") == "true" {
+			exporter, err = prometheus.New()
+			if err != nil {
+				handleErr(err)
+				return shutdown, err
+			}
+		} else {
+			var mexp metric.Exporter
+			mexp, err = otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpointURL(metricEndpoint))
+			if err != nil {
+				handleErr(err)
+				return shutdown, err
+			}
+			exporter = metric.NewPeriodicReader(mexp)
+		}
+		meterProvider = metric.NewMeterProvider(
+			metric.WithReader(exporter),
+			metric.WithResource(otelResource),
+		)
+		shutdownFuncs = append(shutdownFuncs, meterProvider.Shutdown)
+		otel.SetMeterProvider(meterProvider)
+
+		startMeter, err := meterProvider.Meter("server").Int64Counter("server_start")
+		if err != nil {
+			handleErr(err)
+			return shutdown, err
+		}
+		startMeter.Add(ctx, 1)
 	}
-	startMeter.Add(ctx, 1)
 
 	return shutdown, err
 }
